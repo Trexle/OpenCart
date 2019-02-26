@@ -1,0 +1,105 @@
+<form id="payment" class="form-horizontal">
+    <fieldset>
+        <legend>{{ text_credit_card }}</legend>
+
+        <div class="col-md-6 col-md-offset-3">
+            <div id="input-cc-number" class="form-group required ">
+                <label class="col-md-5 control-label" for="input-cc-number">{{ entry_cc_number }}</label>
+                <div class="col-md-7">
+                    <input type="text" name="cc_number" value="" placeholder="{{ entry_cc_number }}"
+                           class="form-control" id="cc_number"/>
+                </div>
+            </div>
+            <div class="form-group required">
+                <label class="col-md-5 control-label" for="input-cc-expire-date">{{ entry_cc_expire_date }}</label>
+                <div class="col-md-7">
+                    <div class="col-md-6 col-no-padding">
+                        <select name="cc_expire_date_month" id="input-cc-expire-date" class="form-control">
+                            {% for month in months %}
+                                <option value="{{ month.value }}">{{ month.text }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-6 col-no-padding">
+                        <select name="cc_expire_date_year" class="form-control">
+                            {% for year in year_expire %}
+                                <option value="{{ year.value }}">{{ year.text }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div id="input-cc-cvv2" class="form-group required">
+                <label class="col-md-5 control-label" for="input-cc-cvv2">{{ entry_cc_cvv2 }}</label>
+                <div class="col-md-5">
+                    <input type="text" name="cc_cvv2" value="" placeholder="{{ entry_cc_cvv2 }}" class="form-control"
+                           maxlength="4"/>
+                </div>
+            </div>
+        </div>
+    </fieldset>
+</form>
+<div class="buttons">
+    <div class="pull-right">
+        <input type="button" value="{{ button_confirm }}" id="button-confirm" class="btn btn-primary"/>
+    </div>
+</div>
+
+<script type="text/javascript">
+
+    $("<link/>", {
+        rel: "stylesheet",
+        type: "text/css",
+        href: "catalog/view/theme/default/stylesheet/trexle.css"
+    }).appendTo("head");
+
+    $('#button-confirm').on('click', function () {
+        $.ajax({
+            url: 'index.php?route=extension/payment/trexle/send',
+            type: 'post',
+            data: $('#payment :input'),
+            dataType: 'json',
+            cache: false,
+            beforeSend: function () {
+                $('#button-confirm').button('loading');
+            },
+            complete: function () {
+                $('#button-confirm').button('reset');
+            },
+            success: function (json) {
+                $("#payment").removeClass("has-error");
+
+                if (json['error']) {
+
+                    if (json['error']['cc_number']) {
+                        $("#input-cc-number").addClass('has-error');
+                    }
+
+                    if (json['error']['cc_cvv2']) {
+                        $("#input-cc-cvv2").addClass('has-error');
+                    }
+
+                    if (json['error']['message']) {
+                        alert(json['error']['message']);
+                    }
+                }
+
+                if (json['success']) {
+                    location = json['success'];
+                }
+            }
+        });
+    });
+
+
+    $.getScript('catalog/view/javascript/jquery/creditCardValidator/jquery.creditCardValidator.js',
+        function () {
+
+            $("input[name='cc_number']").validateCreditCard({});
+
+
+        }
+    );
+
+</script>
+
